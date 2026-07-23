@@ -875,6 +875,24 @@ render_providers_yaml() {
   done
 }
 
+# render_opencode_models — emits opencode JSON model entries from provider data.
+# All models from all providers, one entry each. DRY with the proxy config.
+render_opencode_models() {
+  local i n m first=1
+  n="$_PROVIDER_COUNT"
+  if [ "$n" -eq 0 ]; then printf '"glm-5.2": { "name": "GLM 5.2" }\n'; return; fi
+  for i in $(seq 1 "$n"); do
+    local ml; ml="$(eval "printf '%s' \"\$_PROVIDERS_${i}_MODELS\"")"
+    [ -n "$ml" ] || continue
+    local marr; IFS=',' read -r -a marr <<< "$ml"
+    for m in "${marr[@]}"; do
+      [ "$first" = 1 ] && first=0 || printf ',\n'
+      printf '        "%s": { "name": "%s" }' "$m" "$m"
+    done
+  done
+  printf '\n'
+}
+
 # ---------------------------------------------------------------------------
 # STEPS — each guarded by should_run / step_done
 # ---------------------------------------------------------------------------
@@ -1123,6 +1141,8 @@ CODEXEOF
     _log_info "opencode"; _npm_global "opencode-ai"
     if [ "${_arg_dry_run}" != "on" ]; then
       mkdir -p "$HOME/.config/opencode"
+      # build models block dynamically from provider data (DRY: same source as proxy)
+      local oc_models; oc_models="$(render_opencode_models)"
       cat > "$HOME/.config/opencode/opencode.json" <<OCEOF
 {
   "\$schema": "https://opencode.ai/config.json",
@@ -1135,7 +1155,7 @@ CODEXEOF
         "apiKey": "{env:CLIPROXY_API_KEY}"
       },
       "models": {
-        "glm-5.2": { "name": "GLM 5.2" }
+${oc_models}
       }
     }
   }
