@@ -18,12 +18,13 @@ fi
 # @parseArger opt t3-port "Port for the t3 server" --default-value "3773"
 # @parseArger opt cliproxy-port "Port for CLIProxyAPI" --default-value "8317"
 # @parseArger opt hermes-port "Port for the hermes dashboard" --default-value "9119"
-# @parseArger opt state-file "Path to the idempotency state file" --default-value "$HOME/.ai-devbox/.installed"
+# @parseArger opt state-file "Path to the idempotency state file" --default-value "/home/didi/.ai-devbox/.installed"
 # @parseArger opt force-step "Re-run a single named step (repeatable): git,docker,node,zsh,codex,claude,opencode,t3,cliproxy,hermes,wire,verify" --repeat
 # @parseArger opt cliproxy-key "Proxy auth token agents use; auto-generated if unset" --default-value ""
 # @parseArger opt mgmt-key "CLIProxyAPI management panel password; auto-generated if unset" --default-value ""
 # @parseArger opt claudex-model "Model claudex drives via Claude Code interface" --default-value "gpt-5.6-sol"
 # @parseArger opt glaude-model "Model glaude drives via Claude Code interface" --default-value "glm-5.2"
+# @parseArger opt cheap-model "Cheaper model for the glaude haiku slot and claude-haiku proxy aliases (e.g. glm-4.7); empty = same as glaude-model" --default-value ""
 # @parseArger flag with-zsh "Install zsh and set as default shell" --on
 # @parseArger flag with-codex "Install codex CLI and wire it through CLIProxyAPI" --on
 # @parseArger flag with-claude "Install claude-code and wire it through CLIProxyAPI" --on
@@ -80,12 +81,13 @@ _arg_bind_ip=""
 _arg_t3_port="3773"
 _arg_cliproxy_port="8317"
 _arg_hermes_port="9119"
-_arg_state_file="$HOME/.ai-devbox/.installed"
+_arg_state_file="/home/didi/.ai-devbox/.installed"
 _arg_force_step=()
 _arg_cliproxy_key=""
 _arg_mgmt_key=""
 _arg_claudex_model="gpt-5.6-sol"
 _arg_glaude_model="glm-5.2"
+_arg_cheap_model=""
 # FLAGS
 _arg_with_zsh="on"
 _arg_with_codex="on"
@@ -120,12 +122,13 @@ print_help()
 	echo -e "	--t3-port <t3-port>: Port for the t3 server [default: ' 3773 ']"
 	echo -e "	--cliproxy-port <cliproxy-port>: Port for CLIProxyAPI [default: ' 8317 ']"
 	echo -e "	--hermes-port <hermes-port>: Port for the hermes dashboard [default: ' 9119 ']"
-	echo -e "	--state-file <state-file>: Path to the idempotency state file [default: ' $HOME/.ai-devbox/.installed ']"
+	echo -e "	--state-file <state-file>: Path to the idempotency state file [default: ' /home/didi/.ai-devbox/.installed ']"
 	echo -e "	--force-step <force-step>: Re-run a single named step (repeatable): git,docker,node,zsh,codex,claude,opencode,t3,cliproxy,hermes,wire,verify, repeatable"
 	echo -e "	--cliproxy-key <cliproxy-key>: Proxy auth token agents use; auto-generated if unset [default: '  ']"
 	echo -e "	--mgmt-key <mgmt-key>: CLIProxyAPI management panel password; auto-generated if unset [default: '  ']"
 	echo -e "	--claudex-model <claudex-model>: Model claudex drives via Claude Code interface [default: ' gpt-5.6-sol ']"
 	echo -e "	--glaude-model <glaude-model>: Model glaude drives via Claude Code interface [default: ' glm-5.2 ']"
+	echo -e "	--cheap-model <cheap-model>: Cheaper model for the glaude haiku slot and claude-haiku proxy aliases (e.g. glm-4.7); empty = same as glaude-model [default: '  ']"
 	echo -e "	--with-zsh|--no-with-zsh: Install zsh and set as default shell, on by default (use --no-with-zsh to turn it off)"
 	echo -e "	--with-codex|--no-with-codex: Install codex CLI and wire it through CLIProxyAPI, on by default (use --no-with-codex to turn it off)"
 	echo -e "	--with-claude|--no-with-claude: Install claude-code and wire it through CLIProxyAPI, on by default (use --no-with-claude to turn it off)"
@@ -141,7 +144,7 @@ print_help()
 	echo -e "	--with-glaude|--no-with-glaude: Install glaude wrapper: Claude Code driving GLM via proxy (on by default), on by default (use --no-with-glaude to turn it off)"
 	echo -e "	--with-grok|--no-with-grok: Install grok CLI (x.ai build) via official install script (on by default), on by default (use --no-with-grok to turn it off)"
 	echo -e "Usage :
-	$0 [--node-version <value>] [--provider <value>] [--codex-login-method <value>] [--bind-ip <value>] [--t3-port <value>] [--cliproxy-port <value>] [--hermes-port <value>] [--state-file <value>] [--force-step <value>] [--cliproxy-key <value>] [--mgmt-key <value>] [--claudex-model <value>] [--glaude-model <value>] [--[no-]with-zsh] [--[no-]with-codex] [--[no-]with-claude] [--[no-]with-opencode] [--[no-]with-t3] [--[no-]with-cliproxy] [--[no-]with-hermes] [--[no-]force] [--[no-]dry-run] [--[no-]skip-verify] [--[no-]with-gh] [--[no-]with-claudex] [--[no-]with-glaude] [--[no-]with-grok]";
+	$0 [--node-version <value>] [--provider <value>] [--codex-login-method <value>] [--bind-ip <value>] [--t3-port <value>] [--cliproxy-port <value>] [--hermes-port <value>] [--state-file <value>] [--force-step <value>] [--cliproxy-key <value>] [--mgmt-key <value>] [--claudex-model <value>] [--glaude-model <value>] [--cheap-model <value>] [--[no-]with-zsh] [--[no-]with-codex] [--[no-]with-claude] [--[no-]with-opencode] [--[no-]with-t3] [--[no-]with-cliproxy] [--[no-]with-hermes] [--[no-]force] [--[no-]dry-run] [--[no-]skip-verify] [--[no-]with-gh] [--[no-]with-claudex] [--[no-]with-glaude] [--[no-]with-grok]";
 	fi
 
 }
@@ -314,6 +317,15 @@ parse_commandline()
 				;;
 			--glaude-model=*)
 				_arg_glaude_model="${_key##--glaude-model=}"
+				;;
+			
+			--cheap-model)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_cheap_model="$2"
+				shift
+				;;
+			--cheap-model=*)
+				_arg_cheap_model="${_key##--cheap-model=}"
 				;;
 			
 			--with-zsh)
@@ -494,6 +506,7 @@ print_debug()
 	echo -e "	mgmt-key: ${_arg_mgmt_key}";
 	echo -e "	claudex-model: ${_arg_claudex_model}";
 	echo -e "	glaude-model: ${_arg_glaude_model}";
+	echo -e "	cheap-model: ${_arg_cheap_model}";
 	echo -e "	with-zsh: ${_arg_with_zsh}";
 	echo -e "	with-codex: ${_arg_with_codex}";
 	echo -e "	with-claude: ${_arg_with_claude}";
@@ -797,7 +810,7 @@ parse_providers() {
   local spec keyval k v
   for spec in "${_arg_provider[@]}"; do
     [ -z "$spec" ] && continue
-    local _pname="" _pbase="" _pkey="" _pmodels=""
+    local _pname="" _pbase="" _pkey="" _pmodels="" _pcheap=""
     # split on spaces into key=val tokens
     local tokens; IFS=' ' read -r -a tokens <<< "$spec"
     for keyval in "${tokens[@]}"; do
@@ -807,6 +820,7 @@ parse_providers() {
         base)   _pbase="$v" ;;
         key)    _pkey="$v" ;;
         models) _pmodels="$v" ;;
+        cheap)  _pcheap="$v" ;;   # cheaper model for the haiku slot
       esac
     done
     [ -n "$_pname" ] && [ -n "$_pbase" ] || die "Provider spec missing name/base: '$spec'"
@@ -818,7 +832,8 @@ parse_providers() {
     declare -g "_PROVIDERS_${_PROVIDER_COUNT}_BASE=$_pbase"
     declare -g "_PROVIDERS_${_PROVIDER_COUNT}_KEY=$_pkey"
     declare -g "_PROVIDERS_${_PROVIDER_COUNT}_MODELS=$_pmodels"
-    _log_info "Provider #$_PROVIDER_COUNT: $_pname ($_pbase) models=[$_pmodels]"
+    declare -g "_PROVIDERS_${_PROVIDER_COUNT}_CHEAP=$_pcheap"
+    _log_info "Provider #$_PROVIDER_COUNT: $_pname ($_pbase) models=[$_pmodels] cheap=[$_pcheap]"
   done
 }
 
@@ -847,6 +862,14 @@ render_providers_yaml() {
       local marr; IFS=',' read -r -a marr <<< "$ml"
       for m in "${marr[@]}"; do
         printf '      - { name: "%s", alias: "%s" }\n' "$m" "$m"
+      done
+    fi
+    # claude-haiku aliases routing to the cheap model (so the glaude haiku slot,
+    # which t3 sends as claude-haiku-4-5 etc., lands on the cheaper backend).
+    local ch; ch="$(eval "printf '%s' \"\$_PROVIDERS_${i}_CHEAP\"")"
+    if [ -n "$ch" ]; then
+      for alias in "claude-haiku-4-5" "claude-haiku-4.5" "claude-haiku-4-5-20251001"; do
+        printf '      - { name: "%s", alias: "%s" }\n' "$ch" "$alias"
       done
     fi
   done
@@ -1128,6 +1151,11 @@ export ANTHROPIC_BASE_URL=http://127.0.0.1:${_arg_cliproxy_port}
 export ANTHROPIC_API_KEY=\$CLIPROXY_API_KEY
 ENVEOF
     )
+    # if a cheap model is set, export it so the glaude wrapper's haiku slot uses it
+    if [ -n "${_arg_cheap_model:-}" ]; then
+      printf 'export GLAUDE_HAIKU_MODEL=%s\n' "${_arg_cheap_model}" >> "$HOME/.ai-proxy.env"
+      chmod 600 "$HOME/.ai-proxy.env"
+    fi
     local src='[ -f ~/.ai-proxy.env ] && source ~/.ai-proxy.env'
     for rc in "$HOME/.zshrc" "$HOME/.profile" "$HOME/.zshenv" "$HOME/.bashrc"; do
       grep -qF 'ai-proxy.env' "$rc" 2>/dev/null || printf '\n%s\n' "$src" >> "$rc"
