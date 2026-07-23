@@ -24,10 +24,6 @@ fi
 # @parseArger opt mgmt-key "CLIProxyAPI management panel password; auto-generated if unset" --default-value ""
 # @parseArger opt claudex-model "Model claudex drives via Claude Code interface" --default-value "gpt-5.6-sol"
 # @parseArger opt glaude-model "Model glaude drives via Claude Code interface" --default-value "glm-5.2"
-# @parseArger opt cheap-model "Cheaper model for the glaude haiku slot and claude-haiku proxy aliases (e.g. glm-4.7); empty = same as glaude-model" --default-value ""
-# @parseArger opt claudex-opus-model "Model for claudex opus slot" --default-value "gpt-5.6-sol"
-# @parseArger opt claudex-sonnet-model "Model for claudex sonnet slot" --default-value "gpt-5.6-terra"
-# @parseArger opt claudex-haiku-model "Model for claudex haiku slot" --default-value "gpt-5.6-luna"
 # @parseArger flag with-zsh "Install zsh and set as default shell" --on
 # @parseArger flag with-codex "Install codex CLI and wire it through CLIProxyAPI" --on
 # @parseArger flag with-claude "Install claude-code and wire it through CLIProxyAPI" --on
@@ -90,10 +86,6 @@ _arg_cliproxy_key=""
 _arg_mgmt_key=""
 _arg_claudex_model="gpt-5.6-sol"
 _arg_glaude_model="glm-5.2"
-_arg_cheap_model=""
-_arg_claudex_opus_model="gpt-5.6-sol"
-_arg_claudex_sonnet_model="gpt-5.6-terra"
-_arg_claudex_haiku_model="gpt-5.6-luna"
 # FLAGS
 _arg_with_zsh="on"
 _arg_with_codex="on"
@@ -134,10 +126,6 @@ print_help()
 	echo -e "	--mgmt-key <mgmt-key>: CLIProxyAPI management panel password; auto-generated if unset [default: '  ']"
 	echo -e "	--claudex-model <claudex-model>: Model claudex drives via Claude Code interface [default: ' gpt-5.6-sol ']"
 	echo -e "	--glaude-model <glaude-model>: Model glaude drives via Claude Code interface [default: ' glm-5.2 ']"
-	echo -e "	--cheap-model <cheap-model>: Cheaper model for the glaude haiku slot and claude-haiku proxy aliases (e.g. glm-4.7); empty = same as glaude-model [default: '  ']"
-	echo -e "	--claudex-opus-model <claudex-opus-model>: Model for claudex opus slot [default: ' gpt-5.6-sol ']"
-	echo -e "	--claudex-sonnet-model <claudex-sonnet-model>: Model for claudex sonnet slot [default: ' gpt-5.6-terra ']"
-	echo -e "	--claudex-haiku-model <claudex-haiku-model>: Model for claudex haiku slot [default: ' gpt-5.6-luna ']"
 	echo -e "	--with-zsh|--no-with-zsh: Install zsh and set as default shell, on by default (use --no-with-zsh to turn it off)"
 	echo -e "	--with-codex|--no-with-codex: Install codex CLI and wire it through CLIProxyAPI, on by default (use --no-with-codex to turn it off)"
 	echo -e "	--with-claude|--no-with-claude: Install claude-code and wire it through CLIProxyAPI, on by default (use --no-with-claude to turn it off)"
@@ -153,7 +141,7 @@ print_help()
 	echo -e "	--with-glaude|--no-with-glaude: Install glaude wrapper: Claude Code driving GLM via proxy (on by default), on by default (use --no-with-glaude to turn it off)"
 	echo -e "	--with-grok|--no-with-grok: Install grok CLI (x.ai build) via official install script (on by default), on by default (use --no-with-grok to turn it off)"
 	echo -e "Usage :
-	$0 [--node-version <value>] [--provider <value>] [--codex-login-method <value>] [--bind-ip <value>] [--t3-port <value>] [--cliproxy-port <value>] [--hermes-port <value>] [--state-file <value>] [--force-step <value>] [--cliproxy-key <value>] [--mgmt-key <value>] [--claudex-model <value>] [--glaude-model <value>] [--cheap-model <value>] [--claudex-opus-model <value>] [--claudex-sonnet-model <value>] [--claudex-haiku-model <value>] [--[no-]with-zsh] [--[no-]with-codex] [--[no-]with-claude] [--[no-]with-opencode] [--[no-]with-t3] [--[no-]with-cliproxy] [--[no-]with-hermes] [--[no-]force] [--[no-]dry-run] [--[no-]skip-verify] [--[no-]with-gh] [--[no-]with-claudex] [--[no-]with-glaude] [--[no-]with-grok]";
+	$0 [--node-version <value>] [--provider <value>] [--codex-login-method <value>] [--bind-ip <value>] [--t3-port <value>] [--cliproxy-port <value>] [--hermes-port <value>] [--state-file <value>] [--force-step <value>] [--cliproxy-key <value>] [--mgmt-key <value>] [--claudex-model <value>] [--glaude-model <value>] [--[no-]with-zsh] [--[no-]with-codex] [--[no-]with-claude] [--[no-]with-opencode] [--[no-]with-t3] [--[no-]with-cliproxy] [--[no-]with-hermes] [--[no-]force] [--[no-]dry-run] [--[no-]skip-verify] [--[no-]with-gh] [--[no-]with-claudex] [--[no-]with-glaude] [--[no-]with-grok]";
 	fi
 
 }
@@ -326,42 +314,6 @@ parse_commandline()
 				;;
 			--glaude-model=*)
 				_arg_glaude_model="${_key##--glaude-model=}"
-				;;
-			
-			--cheap-model)
-				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
-				_arg_cheap_model="$2"
-				shift
-				;;
-			--cheap-model=*)
-				_arg_cheap_model="${_key##--cheap-model=}"
-				;;
-			
-			--claudex-opus-model)
-				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
-				_arg_claudex_opus_model="$2"
-				shift
-				;;
-			--claudex-opus-model=*)
-				_arg_claudex_opus_model="${_key##--claudex-opus-model=}"
-				;;
-			
-			--claudex-sonnet-model)
-				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
-				_arg_claudex_sonnet_model="$2"
-				shift
-				;;
-			--claudex-sonnet-model=*)
-				_arg_claudex_sonnet_model="${_key##--claudex-sonnet-model=}"
-				;;
-			
-			--claudex-haiku-model)
-				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
-				_arg_claudex_haiku_model="$2"
-				shift
-				;;
-			--claudex-haiku-model=*)
-				_arg_claudex_haiku_model="${_key##--claudex-haiku-model=}"
 				;;
 			
 			--with-zsh)
@@ -542,10 +494,6 @@ print_debug()
 	echo -e "	mgmt-key: ${_arg_mgmt_key}";
 	echo -e "	claudex-model: ${_arg_claudex_model}";
 	echo -e "	glaude-model: ${_arg_glaude_model}";
-	echo -e "	cheap-model: ${_arg_cheap_model}";
-	echo -e "	claudex-opus-model: ${_arg_claudex_opus_model}";
-	echo -e "	claudex-sonnet-model: ${_arg_claudex_sonnet_model}";
-	echo -e "	claudex-haiku-model: ${_arg_claudex_haiku_model}";
 	echo -e "	with-zsh: ${_arg_with_zsh}";
 	echo -e "	with-codex: ${_arg_with_codex}";
 	echo -e "	with-claude: ${_arg_with_claude}";
@@ -1210,11 +1158,6 @@ export ANTHROPIC_BASE_URL=http://127.0.0.1:${_arg_cliproxy_port}
 export ANTHROPIC_API_KEY=\$CLIPROXY_API_KEY
 ENVEOF
     )
-    # if a cheap model is set, export it so the glaude wrapper's haiku slot uses it
-    if [ -n "${_arg_cheap_model:-}" ]; then
-      printf 'export GLAUDE_HAIKU_MODEL=%s\n' "${_arg_cheap_model}" >> "$HOME/.ai-proxy.env"
-      chmod 600 "$HOME/.ai-proxy.env"
-    fi
     local src='[ -f ~/.ai-proxy.env ] && source ~/.ai-proxy.env'
     for rc in "$HOME/.zshrc" "$HOME/.profile" "$HOME/.zshenv" "$HOME/.bashrc"; do
       grep -qF 'ai-proxy.env' "$rc" 2>/dev/null || printf '\n%s\n' "$src" >> "$rc"
@@ -1276,25 +1219,30 @@ step_claudex_glaude() {
       cat > "$bindir/claudex" <<CLXEOF
 #!/usr/bin/env bash
 # claudex — Claude Code interface driving gpt-5.6 tiers via CLIProxyAPI.
+# Tiers: opus/sonnet/haiku -> sol/terra/luna. Hardcoded — it's what claudex IS.
 _PROXY_ENV="/home/\$(id -un)/.ai-proxy.env"
 [ -f "\$_PROXY_ENV" ] && . "\$_PROXY_ENV"
-export ANTHROPIC_DEFAULT_OPUS_MODEL="\${CLAUDEX_OPUS_MODEL:-${_arg_claudex_opus_model}}"
-export ANTHROPIC_DEFAULT_SONNET_MODEL="\${CLAUDEX_SONNET_MODEL:-${_arg_claudex_sonnet_model}}"
-export ANTHROPIC_DEFAULT_HAIKU_MODEL="\${CLAUDEX_HAIKU_MODEL:-${_arg_claudex_haiku_model}}"
-export CLAUDE_CODE_SUBAGENT_MODEL="\${CLAUDEX_SUBAGENT_MODEL:-${_arg_claudex_model}}"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="gpt-5.6-sol"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="gpt-5.6-terra"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="gpt-5.6-luna"
+export CLAUDE_CODE_SUBAGENT_MODEL="gpt-5.6-sol"
 export CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1
 export CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY=3
 export ENABLE_TOOL_SEARCH=false
-exec claude --model "\${CLAUDEX_MODEL:-${_arg_claudex_model}}" "\$@"
+exec claude --model "gpt-5.6-sol" "\$@"
 CLXEOF
       chmod +x "$bindir/claudex"
-      _log_ok "claudex installed ($bindir/claudex) -> model ${_arg_claudex_model}"
+      _log_ok "claudex installed ($bindir/claudex) -> opus=gpt-5.6-sol sonnet=gpt-5.6-terra haiku=gpt-5.6-luna"
     fi
     # --- glaude: Claude Code interface driving GLM via proxy ---
-    # haiku slot uses --cheap-model if set, else the main model.
+    # haiku slot uses the provider's cheap= model if any was given, else the main.
     if [ "${_arg_with_glaude}" = "on" ]; then
       local _ghaiku="${_arg_glaude_model}"
-      [ -n "${_arg_cheap_model:-}" ] && _ghaiku="${_arg_cheap_model}"
+      local i
+      for i in $(seq 1 "$_PROVIDER_COUNT"); do
+        local _ch; _ch="$(eval "printf '%s' \"\$_PROVIDERS_${i}_CHEAP\"")"
+        if [ -n "$_ch" ]; then _ghaiku="$_ch"; break; fi
+      done
       cat > "$bindir/glaude" <<GLEOF
 #!/usr/bin/env bash
 # glaude — Claude Code interface driving ${_arg_glaude_model} via CLIProxyAPI.
@@ -1302,15 +1250,15 @@ CLXEOF
 # t3 may run this with an isolated HOME.
 _PROXY_ENV="/home/\$(id -un)/.ai-proxy.env"
 [ -f "\$_PROXY_ENV" ] && . "\$_PROXY_ENV"
-export ANTHROPIC_DEFAULT_OPUS_MODEL="\${GLAUDE_OPUS_MODEL:-${_arg_glaude_model}}"
-export ANTHROPIC_DEFAULT_SONNET_MODEL="\${GLAUDE_SONNET_MODEL:-${_arg_glaude_model}}"
-export ANTHROPIC_DEFAULT_HAIKU_MODEL="\${GLAUDE_HAIKU_MODEL:-${_ghaiku}}"
-export CLAUDE_CODE_SUBAGENT_MODEL="\${GLAUDE_SUBAGENT_MODEL:-${_arg_glaude_model}}"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="${_arg_glaude_model}"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="${_arg_glaude_model}"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="${_ghaiku}"
+export CLAUDE_CODE_SUBAGENT_MODEL="${_arg_glaude_model}"
 export ENABLE_TOOL_SEARCH=false
-exec claude --model "\${GLAUDE_MODEL:-${_arg_glaude_model}}" "\$@"
+exec claude --model "${_arg_glaude_model}" "\$@"
 GLEOF
       chmod +x "$bindir/glaude"
-      _log_ok "glaude installed ($bindir/glaude) -> model ${_arg_glaude_model}"
+      _log_ok "glaude installed ($bindir/glaude) -> opus/sonnet=${_arg_glaude_model} haiku=${_ghaiku}"
     fi
   else
     [ "${_arg_with_claudex}" = "on" ] && printf '   [dry-run] create claudex wrapper -> %s\n' "$bindir/claudex"
