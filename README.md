@@ -19,10 +19,10 @@ Optional (on by default, flip with `--no-with-X`):
 - **CLIProxyAPI** — one process that holds your upstream keys and exposes a
   single OpenAI/Anthropic-compatible endpoint. Agents talk to it; your real
   keys never leave the box.
-- **t3** — the web harness. Runs as a systemd user service, bind to your LAN IP,
-  drive the agents from a browser on your laptop.
+- **t3**, **grok** (x.ai build) — the harnesses. t3 runs as a systemd user
+  service, bind to your LAN IP, drive the agents from a browser on your laptop.
 - **hermes** — the always-on agent, in docker compose (the one containerized piece)
-- **grok** (x.ai build), **gh**, **zsh**
+- **gh**, **zsh**
 
 ## The shape of it
 
