@@ -1342,10 +1342,41 @@ T3EOF
   run systemctl --user daemon-reload
   run systemctl --user enable t3.service 2>/dev/null
   run systemctl --user restart t3.service 2>/dev/null
+  # t3-update helper: updates t3 to latest and restarts the service. On PATH.
+  if [ "${_arg_dry_run}" != "on" ]; then
+    cat > "$HOME/.npm-global/bin/t3-update" <<'T3UPEOF'
+#!/usr/bin/env bash
+# t3-update — update t3 to latest and restart the systemd user service.
+set -euo pipefail
+command -v t3 >/dev/null 2>&1 || { echo "t3 not found on PATH" >&2; exit 1; }
+OLD="$(t3 --version 2>/dev/null | head -1)"
+echo "current: $OLD"
+echo "updating via npm..."
+npm install -g t3@latest
+NEW="$(t3 --version 2>/dev/null | head -1)"
+echo "now:     $NEW"
+if systemctl --user list-unit-files 2>/dev/null | grep -q "t3\.service"; then
+  echo "restarting t3.service..."
+  systemctl --user restart t3.service
+  sleep 2
+  if systemctl --user is-active t3.service >/dev/null; then
+    echo "service: active"
+    echo "pairing token:"
+    journalctl --user -u t3.service --no-pager -n 20 2>/dev/null | grep -iE "Pairing URL" | tail -1 | sed 's/.*Pairing URL: //'
+  else
+    echo "service: NOT active (check: systemctl --user status t3)"
+  fi
+else
+  echo "(no t3.service unit found — skipping restart)"
+fi
+[ "$OLD" = "$NEW" ] && echo "already up to date" || echo "updated: $OLD -> $NEW"
+T3UPEOF
+    chmod +x "$HOME/.npm-global/bin/t3-update"
+  fi
   # linger so it survives logout
   _log_info "Enabling linger (requires sudo) so services survive logout"
   run sudo loginctl enable-linger "$USER" 2>/dev/null || _log_warn "enable-linger failed — run: sudo loginctl enable-linger $USER"
-  _log_ok "t3 installed + service enabled"
+  _log_ok "t3 installed + service enabled (use 't3-update' to upgrade later)"
   _log_info "Pairing token: run 'journalctl --user -u t3' or 't3 auth pairing create' on the box"
   step_done t3
 }
