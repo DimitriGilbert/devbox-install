@@ -1070,8 +1070,6 @@ WorkingDirectory=%h/cliproxyapi
 ExecStart=%h/cliproxyapi/cli-proxy-api -config %h/cliproxyapi/config.yaml
 Restart=on-failure
 RestartSec=5
-NoNewPrivileges=true
-PrivateTmp=true
 
 [Install]
 WantedBy=default.target
@@ -1323,8 +1321,6 @@ WorkingDirectory=%h
 ExecStart=%h/.npm-global/bin/t3 serve --host ${bind} --port ${_arg_t3_port} --no-browser
 Restart=on-failure
 RestartSec=5
-NoNewPrivileges=true
-PrivateTmp=true
 
 [Install]
 WantedBy=default.target
