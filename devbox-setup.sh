@@ -1188,7 +1188,9 @@ step_claudex_glaude() {
       cat > "$bindir/claudex" <<CLXEOF
 #!/usr/bin/env bash
 # claudex — Claude Code interface driving ${_arg_claudex_model} via CLIProxyAPI.
-[ -f "\$HOME/.ai-proxy.env" ] && . "\$HOME/.ai-proxy.env"
+# Source proxy env by ABSOLUTE path: t3 may run this with an isolated HOME.
+_PROXY_ENV="/home/\$(id -un)/.ai-proxy.env"
+[ -f "\$_PROXY_ENV" ] && . "\$_PROXY_ENV"
 export ANTHROPIC_DEFAULT_OPUS_MODEL="\${CLAUDEX_OPUS_MODEL:-${_arg_claudex_model}}"
 export ANTHROPIC_DEFAULT_SONNET_MODEL="\${CLAUDEX_SONNET_MODEL:-${_arg_claudex_model}}"
 export ANTHROPIC_DEFAULT_HAIKU_MODEL="\${CLAUDEX_HAIKU_MODEL:-${_arg_claudex_model}}"
@@ -1206,8 +1208,9 @@ CLXEOF
       cat > "$bindir/glaude" <<GLEOF
 #!/usr/bin/env bash
 # glaude — Claude Code interface driving ${_arg_glaude_model} via CLIProxyAPI.
-# Remaps Claude Code opus/sonnet/haiku aliases to GLM so the t3 picker shows GLM.
-[ -f "\$HOME/.ai-proxy.env" ] && . "\$HOME/.ai-proxy.env"
+# Source proxy env by ABSOLUTE path: t3 may run this with an isolated HOME.
+_PROXY_ENV="/home/\$(id -un)/.ai-proxy.env"
+[ -f "\$_PROXY_ENV" ] && . "\$_PROXY_ENV"
 export ANTHROPIC_DEFAULT_OPUS_MODEL="\${GLAUDE_OPUS_MODEL:-${_arg_glaude_model}}"
 export ANTHROPIC_DEFAULT_SONNET_MODEL="\${GLAUDE_SONNET_MODEL:-${_arg_glaude_model}}"
 export ANTHROPIC_DEFAULT_HAIKU_MODEL="\${GLAUDE_HAIKU_MODEL:-${_arg_glaude_model}}"
