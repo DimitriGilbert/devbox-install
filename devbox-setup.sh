@@ -1182,12 +1182,16 @@ step_claudex_glaude() {
   if [ "${_arg_dry_run}" != "on" ]; then
     mkdir -p "$bindir"
     # --- claudex: Claude Code interface driving a Codex/OpenAI model via proxy ---
+    # Model remap (opus/sonnet/haiku slots) makes t3's picker show the real model,
+    # not Claude Code's hardcoded Anthropic names.
     if [ "${_arg_with_claudex}" = "on" ]; then
       cat > "$bindir/claudex" <<CLXEOF
 #!/usr/bin/env bash
 # claudex — Claude Code interface driving ${_arg_claudex_model} via CLIProxyAPI.
-# Sources the proxy env so ANTHROPIC_BASE_URL points at the local proxy.
 [ -f "\$HOME/.ai-proxy.env" ] && . "\$HOME/.ai-proxy.env"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="\${CLAUDEX_OPUS_MODEL:-${_arg_claudex_model}}"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="\${CLAUDEX_SONNET_MODEL:-${_arg_claudex_model}}"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="\${CLAUDEX_HAIKU_MODEL:-${_arg_claudex_model}}"
 export CLAUDE_CODE_SUBAGENT_MODEL="\${CLAUDEX_SUBAGENT_MODEL:-${_arg_claudex_model}}"
 export CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1
 export CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY=3
@@ -1202,7 +1206,11 @@ CLXEOF
       cat > "$bindir/glaude" <<GLEOF
 #!/usr/bin/env bash
 # glaude — Claude Code interface driving ${_arg_glaude_model} via CLIProxyAPI.
+# Remaps Claude Code opus/sonnet/haiku aliases to GLM so the t3 picker shows GLM.
 [ -f "\$HOME/.ai-proxy.env" ] && . "\$HOME/.ai-proxy.env"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="\${GLAUDE_OPUS_MODEL:-${_arg_glaude_model}}"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="\${GLAUDE_SONNET_MODEL:-${_arg_glaude_model}}"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="\${GLAUDE_HAIKU_MODEL:-${_arg_glaude_model}}"
 export CLAUDE_CODE_SUBAGENT_MODEL="\${GLAUDE_SUBAGENT_MODEL:-${_arg_glaude_model}}"
 export ENABLE_TOOL_SEARCH=false
 exec claude --model "\${GLAUDE_MODEL:-${_arg_glaude_model}}" "\$@"
