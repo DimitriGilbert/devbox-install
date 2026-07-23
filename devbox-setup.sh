@@ -24,6 +24,8 @@ fi
 # @parseArger opt mgmt-key "CLIProxyAPI management panel password; auto-generated if unset" --default-value ""
 # @parseArger opt claudex-model "Model claudex drives via Claude Code interface" --default-value "gpt-5.6-sol"
 # @parseArger opt glaude-model "Model glaude drives via Claude Code interface" --default-value "glm-5.2"
+# @parseArger opt zai-mcp-key "z.ai API key for vision/search MCP servers (zai-mcp-server, web-reader, zread); empty = skip those MCPs" --default-value ""
+# @parseArger opt context7-key "API key for the context7 MCP server; empty = skip context7" --default-value ""
 # @parseArger flag with-zsh "Install zsh and set as default shell" --on
 # @parseArger flag with-codex "Install codex CLI and wire it through CLIProxyAPI" --on
 # @parseArger flag with-claude "Install claude-code and wire it through CLIProxyAPI" --on
@@ -86,6 +88,8 @@ _arg_cliproxy_key=""
 _arg_mgmt_key=""
 _arg_claudex_model="gpt-5.6-sol"
 _arg_glaude_model="glm-5.2"
+_arg_zai_mcp_key="${ZAI_API_KEY}"
+_arg_context7_key="${CONTEXT7_API_KEY}"
 # FLAGS
 _arg_with_zsh="on"
 _arg_with_codex="on"
@@ -126,6 +130,8 @@ print_help()
 	echo -e "	--mgmt-key <mgmt-key>: CLIProxyAPI management panel password; auto-generated if unset [default: '  ']"
 	echo -e "	--claudex-model <claudex-model>: Model claudex drives via Claude Code interface [default: ' gpt-5.6-sol ']"
 	echo -e "	--glaude-model <glaude-model>: Model glaude drives via Claude Code interface [default: ' glm-5.2 ']"
+	echo -e "	--zai-mcp-key <zai-mcp-key>: z.ai API key for vision/search MCP servers (zai-mcp-server, web-reader, zread); empty = skip those MCPs [default: '  ']"
+	echo -e "	--context7-key <context7-key>: API key for the context7 MCP server; empty = skip context7 [default: '  ']"
 	echo -e "	--with-zsh|--no-with-zsh: Install zsh and set as default shell, on by default (use --no-with-zsh to turn it off)"
 	echo -e "	--with-codex|--no-with-codex: Install codex CLI and wire it through CLIProxyAPI, on by default (use --no-with-codex to turn it off)"
 	echo -e "	--with-claude|--no-with-claude: Install claude-code and wire it through CLIProxyAPI, on by default (use --no-with-claude to turn it off)"
@@ -141,7 +147,7 @@ print_help()
 	echo -e "	--with-glaude|--no-with-glaude: Install glaude wrapper: Claude Code driving GLM via proxy (on by default), on by default (use --no-with-glaude to turn it off)"
 	echo -e "	--with-grok|--no-with-grok: Install grok CLI (x.ai build) via official install script (on by default), on by default (use --no-with-grok to turn it off)"
 	echo -e "Usage :
-	$0 [--node-version <value>] [--provider <value>] [--codex-login-method <value>] [--bind-ip <value>] [--t3-port <value>] [--cliproxy-port <value>] [--hermes-port <value>] [--state-file <value>] [--force-step <value>] [--cliproxy-key <value>] [--mgmt-key <value>] [--claudex-model <value>] [--glaude-model <value>] [--[no-]with-zsh] [--[no-]with-codex] [--[no-]with-claude] [--[no-]with-opencode] [--[no-]with-t3] [--[no-]with-cliproxy] [--[no-]with-hermes] [--[no-]force] [--[no-]dry-run] [--[no-]skip-verify] [--[no-]with-gh] [--[no-]with-claudex] [--[no-]with-glaude] [--[no-]with-grok]";
+	$0 [--node-version <value>] [--provider <value>] [--codex-login-method <value>] [--bind-ip <value>] [--t3-port <value>] [--cliproxy-port <value>] [--hermes-port <value>] [--state-file <value>] [--force-step <value>] [--cliproxy-key <value>] [--mgmt-key <value>] [--claudex-model <value>] [--glaude-model <value>] [--zai-mcp-key <value>] [--context7-key <value>] [--[no-]with-zsh] [--[no-]with-codex] [--[no-]with-claude] [--[no-]with-opencode] [--[no-]with-t3] [--[no-]with-cliproxy] [--[no-]with-hermes] [--[no-]force] [--[no-]dry-run] [--[no-]skip-verify] [--[no-]with-gh] [--[no-]with-claudex] [--[no-]with-glaude] [--[no-]with-grok]";
 	fi
 
 }
@@ -314,6 +320,24 @@ parse_commandline()
 				;;
 			--glaude-model=*)
 				_arg_glaude_model="${_key##--glaude-model=}"
+				;;
+			
+			--zai-mcp-key)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_zai_mcp_key="$2"
+				shift
+				;;
+			--zai-mcp-key=*)
+				_arg_zai_mcp_key="${_key##--zai-mcp-key=}"
+				;;
+			
+			--context7-key)
+				test $# -lt 2 && die "Missing value for the option: '$_key'" 1
+				_arg_context7_key="$2"
+				shift
+				;;
+			--context7-key=*)
+				_arg_context7_key="${_key##--context7-key=}"
 				;;
 			
 			--with-zsh)
@@ -494,6 +518,8 @@ print_debug()
 	echo -e "	mgmt-key: ${_arg_mgmt_key}";
 	echo -e "	claudex-model: ${_arg_claudex_model}";
 	echo -e "	glaude-model: ${_arg_glaude_model}";
+	echo -e "	zai-mcp-key: ${_arg_zai_mcp_key}";
+	echo -e "	context7-key: ${_arg_context7_key}";
 	echo -e "	with-zsh: ${_arg_with_zsh}";
 	echo -e "	with-codex: ${_arg_with_codex}";
 	echo -e "	with-claude: ${_arg_with_claude}";
@@ -1265,6 +1291,92 @@ GLEOF
   step_done claudex_glaude
 }
 
+step_mcp() {
+  _log_step "MCP servers"
+  should_run mcp || return 0
+  local zkey="${_arg_zai_mcp_key}"
+  local ckey="${_arg_context7_key}"
+  if [ -z "$zkey" ] && [ -z "$ckey" ]; then
+    _log_info "MCP: skipped (no --zai-mcp-key or --context7-key given)"
+    step_done mcp; return 0
+  fi
+  if [ "${_arg_dry_run}" != "on" ]; then
+    # build the MCP definitions as JSON via python (handles nested escaping)
+    python3 - "$zkey" "$ckey" "$HOME" <<'PYEOF'
+import json, os, sys
+zkey, ckey, home = sys.argv[1], sys.argv[2], sys.argv[3]
+
+# --- server definitions ---
+def stdio(cmd, args, env=None):
+    s = {"type":"stdio","command":cmd,"args":args}
+    if env: s["env"] = env
+    return s
+def http(url, headers):
+    return {"type":"http","url":url,"headers":headers}
+
+VISION_SEARCH = {}
+CONTEXT7 = {}
+if zkey:
+    VISION_SEARCH = {
+        "zai-mcp-server": stdio("npx",["-y","@z_ai/mcp-server"],
+                                {"Z_AI_MODE":"ZAI","Z_AI_API_KEY":zkey}),
+        "web-reader": http("https://api.z.ai/api/mcp/web_reader/mcp",
+                           {"Authorization":f"Bearer {zkey}"}),
+        "zread": http("https://api.z.ai/api/mcp/zread/mcp",
+                      {"Authorization":f"Bearer {zkey}"}),
+    }
+if ckey:
+    CONTEXT7 = {"context7": stdio("npx",
+        ["-y","@upstash/context7-mcp","--api-key",ckey])}
+
+def claude_mcp(path, mcps):
+    if not os.path.exists(path) or not mcps:
+        return
+    d = json.load(open(path))
+    d.setdefault("mcpServers", {}).update(mcps)
+    json.dump(d, open(path,"w"), indent=2)
+    print(f"  {os.path.relpath(path, home)}: +{list(mcps)}")
+
+def opencode_mcp(path, mcps):
+    if not os.path.exists(path) or not mcps:
+        return
+    d = json.load(open(path))
+    d.setdefault("mcp", {})
+    for name, spec in mcps.items():
+        if "command" in spec:
+            entry = {"type":"local","enabled":True,
+                     "command":[spec["command"]]+spec.get("args",[])}
+            if spec.get("env"): entry["environment"] = spec["env"]
+        else:
+            entry = {"type":"remote","url":spec["url"],"enabled":True}
+            if spec.get("headers"): entry["headers"] = spec["headers"]
+        d["mcp"][name] = entry
+    json.dump(d, open(path,"w"), indent=2)
+    print(f"  {os.path.relpath(path, home)}: +{list(mcps)}")
+
+# glaude: vision + search only
+claude_mcp(f"{home}/glaude/.claude.json", VISION_SEARCH)
+# claudex: vision + search + context7
+vs_c7 = {**VISION_SEARCH, **CONTEXT7}
+claude_mcp(f"{home}/claudex/.claude.json", vs_c7)
+# opencode: context7 only
+opencode_mcp(f"{home}/.config/opencode/opencode.json", CONTEXT7)
+print("done (codex handled separately below)")
+PYEOF
+    # codex: uses config.toml via `codex mcp add`
+    local cdir="$HOME/.codex"
+    if [ -n "$ckey" ] && command -v codex >/dev/null 2>&1; then
+      codex mcp add context7 -- npx -y @upstash/context7-mcp --api-key "$ckey" 2>/dev/null \
+        && _log_ok "codex: +context7"
+    fi
+  else
+    [ -n "$zkey" ]  && printf '   [dry-run] inject vision+search MCP into glaude/claudex\n'
+    [ -n "$ckey" ]  && printf '   [dry-run] inject context7 MCP into claudex/opencode/codex\n'
+  fi
+  _log_ok "MCP servers configured"
+  step_done mcp
+}
+
 step_grok() {
   [ "${_arg_with_grok}" = "on" ] || { _log_info "grok: skipped (--no-with-grok)"; return 0; }
   _log_step "grok CLI (x.ai build)"
@@ -1513,6 +1625,7 @@ main() {
   step_agents
   # wrappers depend on claude being installed + proxy env present
   step_claudex_glaude
+  step_mcp
   step_grok
   step_t3
   step_hermes
